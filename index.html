@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>찾아줘. - 잃어버린 소중한 것, 함께 찾아볼까요?</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- 프리미엄 한글 폰트: Pretendard / Noto Sans KR -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <!-- 오픈소스 인터랙티브 지도 라이브러리: Leaflet.js (순수 바닐라 지원) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- ========================================== -->
+    <!-- 1. 좌측 사이드바 (WORKSPACE) -->
+    <!-- ========================================== -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-logo">
+          <div class="logo-icon-box">
+            <svg class="logo-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </div>
+          <span class="logo-title">찾아줘<span class="logo-dot">.</span></span>
+        </div>
+      </div>
+
+      <div class="sidebar-section-label">WORKSPACE</div>
+
+      <nav class="sidebar-nav">
+        <button type="button" id="nav-item-home" class="nav-item active" data-target="home">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span>홈</span>
+        </button>
+
+        <button type="button" id="nav-item-all" class="nav-item" data-target="all">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          <span>전체 분실물 모아보기</span>
+        </button>
+
+        <button type="button" id="nav-item-map" class="nav-item" data-target="map">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+            <line x1="8" y1="2" x2="8" y2="18"></line>
+            <line x1="16" y1="6" x2="16" y2="22"></line>
+          </svg>
+          <span>보관 장소 지도 (찾아가기)</span>
+        </button>
+
+        <button type="button" id="nav-item-add" class="nav-item" data-target="add">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>분실물 등록</span>
+        </button>
+
+        <button type="button" id="nav-item-ai" class="nav-item" data-target="ai">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>AI 탐정과 대화</span>
+        </button>
+
+        <button type="button" id="nav-item-chat" class="nav-item" data-target="chat">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 8h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2v4l-4-4H9a1.994 1.994 0 0 1-1.414-.586m0 0L11 14h4a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2v4l.586-.586z"></path>
+          </svg>
+          <span>이웃과 1:1 채팅</span>
+          <span id="chat-nav-badge" class="chat-count-badge hidden">NEW</span>
+        </button>
+
+        <button type="button" id="nav-item-history" class="nav-item" data-target="history">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span>내 기록</span>
+        </button>
+      </nav>
+
+      <!-- 사이드바 하단 도우미 위젯 -->
+      <div class="sidebar-footer">
+        <div class="help-card">
+          <div class="help-card-badge">💡</div>
+          <div class="help-card-title">도움이 필요하신가요?</div>
+          <div class="help-card-desc">분실물 찾는 꿀팁을 알려드려요.</div>
+          <button type="button" id="btn-quick-ask" class="help-card-link">탐정에게 물어보기 ↗</button>
+        </div>
+
+        <div class="user-profile-bar">
+          <div class="user-avatar">나</div>
+          <div class="user-info">
+            <div class="user-greeting">반가워요!</div>
+            <div class="user-sub">오늘도 찾아볼까요?</div>
+          </div>
+          <span class="user-more-arrow">⌄</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ========================================== -->
+    <!-- 2. 우측 메인 콘텐츠 대시보드 -->
+    <!-- ========================================== -->
+    <div class="main-wrapper">
+      <!-- 상단 헤더 바 (Top Bar) -->
+      <header class="top-bar">
+        <div class="breadcrumb">
+          <span>찾아줘</span>
+          <span class="bc-sep">></span>
+          <span id="breadcrumb-current" class="bc-current">홈</span>
+        </div>
+
+        <div class="top-bar-actions">
+          <div class="security-badge">
+            <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            <span>개인정보는 안전하게</span>
+          </div>
+
+          <!-- 알림 버튼 -->
+          <div class="noti-wrapper">
+            <button type="button" id="btn-noti-bell" class="top-icon-btn" aria-label="알림 열기">
+              <svg class="bell-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              <span id="noti-badge-dot" class="noti-badge-dot hidden"></span>
+            </button>
+
+            <!-- 알림 드롭다운 레이어 -->
+            <div id="noti-dropdown" class="noti-dropdown hidden">
+              <div class="noti-dropdown-header">
+                <h4>새로운 매칭 알림</h4>
+                <button type="button" id="btn-clear-all-noti" class="btn-clean">모두 읽음</button>
+              </div>
+              <div id="noti-dropdown-body" class="noti-dropdown-body">
+                <div class="empty-noti-msg">아직 새로운 알림이 없어요.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="top-avatar">
+            <span>MY</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- ========================================== -->
+      <!-- [VIEW 1] 홈 대시보드 (이미지와 동일한 구성) -->
+      <!-- ========================================== -->
+      <main id="view-home" class="content-view">
+        <!-- A. 히어로 배너 (FIND WHAT MATTERS) -->
+        <section class="hero-banner">
+          <div class="hero-text-content">
+            <div class="hero-tag">
+              <span class="tag-icon">⚡</span>
+              <span>FIND WHAT MATTERS</span>
+            </div>
+            <h1 class="hero-title">
+              잃어버린 소중한 것,<br>
+              함께 찾아볼까요?
+            </h1>
+            <p class="hero-desc">
+              기억나는 단서를 알려주시면 AI 탐정이<br>
+              예상된 습득물을 꼼꼼히 찾아드려요.
+            </p>
+            <div class="hero-actions">
+              <button type="button" id="btn-hero-start" class="btn-primary-dark">
+                <span>분실물 찾기 시작</span>
+                <span class="btn-arrow-icon">→</span>
+              </button>
+              <button type="button" id="btn-hero-ai" class="btn-ghost-dark">
+                <svg class="btn-chat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>AI 탐정에게 말하기</span>
+              </button>
+            </div>
+            <div class="hero-clue-tip">
+              <span class="clue-icon">🔍 💡</span>
+              <span class="clue-text">단서 하나면 충분해요</span>
+              <a href="#" id="link-report-continue" class="clue-link">리포트 이어보기</a>
+            </div>
+          </div>
+
+          <div class="hero-illustration">
+            <div class="glass-search-card">
+              <div class="magnifier-circle">
+                <svg class="mag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </div>
+              <div class="search-memo-card">
+                <span class="memo-badge">정밀탐색</span>
+                <p class="memo-title">함께 찾아봐요</p>
+                <span class="memo-sub">경찰청 Lost112 연동</span>
+              </div>
+            </div>
+            <div class="deco-badge-text">AI IS YOUR PERSONAL LOST & FOUND DETECTIVE</div>
+          </div>
+        </section>
+
+        <!-- B. 퀵 서치 영역 (QUICK SEARCH) -->
+        <section class="quick-search-section">
+          <div class="section-title-row">
+            <div>
+              <div class="section-kicker">QUICK SEARCH</div>
+              <h2 class="section-heading">어떤 물건을 찾고 계세요?</h2>
+            </div>
+            <a href="#" id="link-detail-search" class="text-link-action">상세하게 찾아보기 ↗</a>
+          </div>
+
+          <!-- 분할형 듀얼 인풋 검색바 -->
+          <div class="dual-search-bar">
+            <div class="search-field-col keyword-col">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" id="home-search-keyword" placeholder="예: 물방울 지갑, 무선 이어폰..." autocomplete="off">
+            </div>
+
+            <div class="search-divider-line"></div>
+
+            <div class="search-field-col location-col">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              <input type="text" id="home-search-location" placeholder="어디에서 잃어버리셨나요?" autocomplete="off">
+            </div>
+
+            <button type="button" id="btn-home-search" class="btn-search-dark">
+              <svg class="btn-lens" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <span>찾아보기</span>
+            </button>
+          </div>
+
+          <!-- 추천 검색어 태그 칩 -->
+          <div class="popular-tags-row">
+            <span class="tags-prefix">자주 찾는 물건</span>
+            <div class="tag-chips-wrapper">
+              <button type="button" class="quick-tag-chip" data-kw="지갑">#지갑</button>
+              <button type="button" class="quick-tag-chip" data-kw="무선이어폰">#무선이어폰</button>
+              <button type="button" class="quick-tag-chip" data-kw="가방">#가방</button>
+              <button type="button" class="quick-tag-chip" data-kw="아이폰">#아이폰</button>
+              <button type="button" class="quick-tag-chip" data-kw="에어팟">#에어팟</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- C. 하단 그리드 (HOW IT WORKS + 내 매칭 현황 & 최근 검색) -->
+        <div class="bottom-dashboard-grid">
+          <!-- C-1. 좌측 HOW IT WORKS -->
+          <div class="grid-col-how">
+            <div class="how-card">
+              <div class="how-header">
+                <div>
+                  <div class="section-kicker">HOW IT WORKS</div>
+                  <h3 class="how-title">찾아줘는 이렇게 도와드려요</h3>
+                </div>
+                <span class="step-num-badge">01 — 03</span>
+              </div>
+
+              <div class="how-steps-row">
+                <div class="how-step-item">
+                  <div class="step-icon-box orange-box">📋</div>
+                  <div class="step-kicker">STEP 01</div>
+                  <div class="step-name">기억나는 단서 입력</div>
+                  <div class="step-desc">사진이나 예상 장소, 시간 등 기억나는 만큼 입력하세요.</div>
+                </div>
+
+                <div class="step-arrow-line">→</div>
+
+                <div class="how-step-item">
+                  <div class="step-icon-box green-box">✨</div>
+                  <div class="step-kicker">STEP 02</div>
+                  <div class="step-name">비슷한 물건 탐색</div>
+                  <div class="step-desc">전국의 습득물 데이터와 유사한 건을 전방위 매칭해요.</div>
+                </div>
+
+                <div class="step-arrow-line">→</div>
+
+                <div class="how-step-item">
+                  <div class="step-icon-box brown-box">📍</div>
+                  <div class="step-kicker">STEP 03</div>
+                  <div class="step-name">보관 장소 확인</div>
+                  <div class="step-desc">보관 기관의 연락처와 확인처를 즉시 안내해 드려요.</div>
+                </div>
+              </div>
+
+              <!-- 하단 실시간 매칭 배너 -->
+              <div class="how-banner-box">
+                <div class="banner-icon">🔔</div>
+                <div class="banner-text">분실물이라도 지금 접수되는 순간부터 실시간 매칭으로 자동 리포트 해드려요.</div>
+                <a href="#" id="link-how-more" class="banner-link">자세히 보기 ↗</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- C-2. 우측 사이드 위젯 그룹 -->
+          <div class="grid-col-widgets">
+            <!-- 내 매칭 현황 다크 카드 -->
+            <div class="match-status-card">
+              <div class="match-card-top">
+                <span class="match-card-label">내 매칭 수령</span>
+                <a href="#" id="link-match-receipt" class="match-arrow-link">↗</a>
+              </div>
+              <div class="match-count-row">
+                <span id="stat-match-count" class="match-number">00</span>
+                <span class="match-unit">건</span>
+              </div>
+              <div class="match-card-desc">현재 실시간 매칭 진행 중</div>
+              <button type="button" id="btn-quick-new-lost" class="btn-match-add">새 분실물 등록하기 +</button>
+            </div>
+
+            <!-- 최근 검색 카드 -->
+            <div class="recent-searches-card">
+              <div class="recent-card-top">
+                <h4 class="recent-card-title">최근 검색</h4>
+                <a href="#" id="btn-clear-recent-all" class="recent-card-action">모두 지우기 ↗</a>
+              </div>
+              <div id="home-recent-list" class="recent-items-list">
+                <!-- 동적 렌더링 -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- D. 검색 결과 피드 섹션 (검색 시 노출) -->
+        <section id="search-result-section" class="search-result-section hidden">
+          <div class="section-title-row">
+            <h3 id="search-result-title" class="section-heading">검색 결과</h3>
+            <button type="button" id="btn-close-search-result" class="btn-clean">닫기 ✕</button>
+          </div>
+          <div id="search-result-list" class="result-cards-grid">
+            <!-- 검색 결과 동적 렌더링 -->
+          </div>
+        </section>
+      </main>
+
+      <!-- ========================================== -->
+      <!-- [VIEW 6] 전체 분실물 모아보기 (신규 기능) -->
+      <!-- ========================================== -->
+      <section id="view-all" class="content-view hidden">
+        <div class="all-items-container">
+          <div class="section-title-row">
+            <div>
+              <div class="section-kicker">ALL LOST & FOUND</div>
+              <h2 class="section-heading">등록된 분실물 모아보기</h2>
+            </div>
+            <span id="all-items-total-badge" class="count-pill">총 0건</span>
+          </div>
+
+          <!-- 유형 필터 탭 (토스 TDS 스타일 세그먼트) -->
+          <div class="all-filter-controls">
+            <div class="filter-mode-tabs">
+              <button type="button" class="f-mode-btn active" data-mode="all">전체 물건</button>
+              <button type="button" class="f-mode-btn" data-mode="lost">😢 잃어버렸어요 (분실)</button>
+              <button type="button" class="f-mode-btn" data-mode="found">🎁 주웠어요 (습득)</button>
+            </div>
+
+            <!-- 카테고리 칩 필터 -->
+            <div class="filter-category-chips">
+              <button type="button" class="f-cat-chip active" data-cat="all">전체 카테고리</button>
+              <button type="button" class="f-cat-chip" data-cat="전자기기">🎧 전자기기</button>
+              <button type="button" class="f-cat-chip" data-cat="지갑/카드">👛 지갑/카드</button>
+              <button type="button" class="f-cat-chip" data-cat="가방/의류">🎒 가방/의류</button>
+              <button type="button" class="f-cat-chip" data-cat="열쇠/소지품">🔑 열쇠/소지품</button>
+              <button type="button" class="f-cat-chip" data-cat="기타">📦 기타</button>
+            </div>
+          </div>
+
+          <!-- 전체 물건 카드 그리드 -->
+          <div id="all-items-grid" class="all-cards-grid">
+            <!-- JS 동적 렌더링 -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- [VIEW 7] 보관 장소 지도 및 찾아가기 길안내 (신규 기능) -->
+      <!-- ========================================== -->
+      <section id="view-map" class="content-view hidden">
+        <div class="map-view-layout">
+          <!-- 상단 지도 컨트롤 바 -->
+          <div class="map-controls-card">
+            <div class="map-control-left">
+              <span class="map-target-label">보관 물품 선택:</span>
+              <select id="map-item-select" class="map-select-box">
+                <!-- JS 동적 렌더링 -->
+              </select>
+            </div>
+            <div class="map-control-right">
+              <button type="button" id="btn-get-my-location" class="btn-location-gps">
+                <span>🎯 내 위치 찾기 (GPS)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 인터랙티브 지도 영역 (Leaflet) -->
+          <div class="map-canvas-wrapper">
+            <div id="lost-found-map" class="leaflet-map-container"></div>
+            <!-- 지도 위 플로팅 범례 -->
+            <div class="map-floating-legend">
+              <div class="legend-item"><span class="legend-dot blue-dot"></span><span>내 현재 위치</span></div>
+              <div class="legend-item"><span class="legend-dot orange-dot"></span><span>물건 보관 장소</span></div>
+            </div>
+          </div>
+
+          <!-- 하단 찾아가기 경로 정보 카드 (Toss TDS) -->
+          <div id="route-info-card" class="route-summary-card">
+            <div class="route-header-row">
+              <div class="route-title-box">
+                <span class="route-kicker">찾아가는 경로 안내</span>
+                <h3 id="route-item-title" class="route-item-title">에어팟 프로 2세대 보관처로 이동</h3>
+              </div>
+              <div class="route-stats-pill">
+                <span id="route-distance-text" class="route-stat-highlight">약 850m</span>
+                <span class="stat-sep">·</span>
+                <span id="route-duration-text" class="route-stat-sub">도보 약 12분</span>
+              </div>
+            </div>
+
+            <div class="route-details-grid">
+              <div class="detail-col">
+                <span class="d-label">내 출발 위치</span>
+                <div id="route-start-loc" class="d-val">내 현재 위치 (GPS 자동 감지)</div>
+              </div>
+              <div class="detail-arrow">→</div>
+              <div class="detail-col">
+                <span class="d-label">도착 보관 장소</span>
+                <div id="route-end-loc" class="d-val">강남역 11번 출구 고객안전실</div>
+              </div>
+            </div>
+
+            <!-- 외부 내비게이션 바로가기 & 채팅 연동 버튼 그룹 -->
+            <div class="route-actions-row">
+              <a href="#" id="link-kakao-map" target="_blank" class="btn-external-nav kakao-btn">
+                <span>카카오맵 길찾기 ↗</span>
+              </a>
+              <a href="#" id="link-naver-map" target="_blank" class="btn-external-nav naver-btn">
+                <span>네이버 지도 길찾기 ↗</span>
+              </a>
+              <button type="button" id="btn-map-chat" class="btn-primary-dark">
+                <span>💬 보관처/이웃과 대화하기</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- [VIEW 2] 분실물 / 습득물 등록 -->
+      <!-- ========================================== -->
+      <section id="view-add" class="content-view hidden">
+        <div class="form-container-card">
+          <div class="form-card-header">
+            <h2 class="form-title">분실물 등록하기</h2>
+            <p class="form-desc">사진을 올려주시면 AI 탐정이 물건의 특징을 정밀하게 추출하고 보관처를 매칭해 드려요.</p>
+          </div>
+
+          <!-- 분실/습득 토글 세그먼트 -->
+          <div class="register-mode-toggle">
+            <button type="button" id="tab-reg-lost" class="reg-toggle-btn active">😢 잃어버렸어요 (분실물 등록)</button>
+            <button type="button" id="tab-reg-found" class="reg-toggle-btn">🎁 주웠어요 (주인 찾아주기)</button>
+          </div>
+
+          <!-- 사진 업로드 드롭존 -->
+          <div id="reg-dropzone" class="upload-dropzone">
+            <input type="file" id="reg-file-input" accept="image/png, image/jpeg, image/webp" class="file-input-hidden">
+            
+            <div id="reg-dropzone-empty" class="dropzone-empty-state">
+              <div class="drop-icon-circle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+              </div>
+              <p class="drop-title">사진을 여기에 끌어다 놓거나 <strong>클릭하여 선택</strong>하세요</p>
+              <p class="drop-sub">JPG, PNG, WEBP (5MB 이하)</p>
+            </div>
+
+            <div id="reg-dropzone-preview" class="dropzone-preview-state hidden">
+              <img id="reg-preview-img" src="" alt="미리보기" class="preview-thumb">
+              <div class="preview-meta">
+                <span id="reg-preview-filename" class="p-filename">사진.jpg</span>
+                <span id="reg-preview-filesize" class="p-filesize">0 KB</span>
+              </div>
+              <button type="button" id="btn-reg-remove-img" class="btn-pill-outline">다른 사진 올리기</button>
+            </div>
+          </div>
+
+          <!-- AI 분석 버튼 -->
+          <div class="form-action-center">
+            <button type="button" id="btn-reg-analyze" class="btn-primary-dark" disabled>
+              <span>AI 탐정에게 특징 분석 요청</span>
+              <span>⚡</span>
+            </button>
+          </div>
+
+          <!-- AI 분석 로딩 -->
+          <div id="reg-ai-loading" class="ai-loading-box hidden">
+            <div class="loading-spin"></div>
+            <p class="spin-title">AI 탐정이 사진 속 물건의 특징을 살펴보고 있어요</p>
+            <p class="spin-sub">잠시만 기다려 주세요 (약 2~4초 소요)</p>
+          </div>
+
+          <!-- AI 분석 결과 카드 & 추가 정보 입력 -->
+          <div id="reg-ai-result" class="ai-result-panel hidden">
+            <div class="result-card-badge">AI 분석 완료</div>
+            <div class="ai-fields-grid">
+              <div class="field-row">
+                <span class="f-label">물품명:</span>
+                <input type="text" id="ai-item-name" class="f-input" placeholder="물품명">
+              </div>
+              <div class="field-row">
+                <span class="f-label">카테고리:</span>
+                <input type="text" id="ai-item-category" class="f-input" placeholder="카테고리 (예: 전자기기)">
+              </div>
+              <div class="field-row">
+                <span class="f-label">색상:</span>
+                <input type="text" id="ai-item-color" class="f-input" placeholder="주요 색상">
+              </div>
+              <div class="field-row">
+                <span class="f-label">식별 특징:</span>
+                <textarea id="ai-item-features" class="f-textarea" rows="2" placeholder="고유한 식별 특징"></textarea>
+              </div>
+            </div>
+
+            <div class="manual-inputs-section">
+              <div class="input-block">
+                <label for="reg-input-loc" class="block-label">분실/발견 장소</label>
+                <input type="text" id="reg-input-loc" class="f-input" placeholder="예: 강남역 2번 출구 인근 카페, 지하철 2호선">
+              </div>
+              <div class="input-block">
+                <label for="reg-input-time" class="block-label">일시 및 추가 메모</label>
+                <input type="text" id="reg-input-time" class="f-input" placeholder="예: 2026년 11월 17일 오후 2시경, 직접 보관 중">
+              </div>
+            </div>
+
+            <button type="button" id="btn-complete-register" class="btn-primary-dark w-full">
+              <span>동네에 등록하고 카테고리 매칭 알림 받기</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- [VIEW 3] AI 탐정과 대화 (1:1 질의응답) -->
+      <!-- ========================================== -->
+      <section id="view-ai" class="content-view hidden">
+        <div class="chat-card-container">
+          <div class="chat-header-bar">
+            <div class="ai-profile-circle">🕵️‍♂️</div>
+            <div>
+              <h3 class="chat-agent-title">AI 유실물 전문 탐정</h3>
+              <p class="chat-agent-desc">전국 유실물 매뉴얼과 Lost112 기반으로 즉시 대처 방법을 찾아드립니다.</p>
+            </div>
+          </div>
+
+          <div class="chat-suggested-chips">
+            <button type="button" class="sug-chip" data-ask="지하철에서 가방을 두고 내렸을 때 역무실 신고 순서 알려줘">🚇 지하철 가방 분실 대처법</button>
+            <button type="button" class="sug-chip" data-ask="지갑 잃어버렸을 때 카드 정지와 Lost112 신고는 어떻게 해?">💳 지갑 분실 신고 절차</button>
+            <button type="button" class="sug-chip" data-ask="스마트폰 배터리가 꺼진 상태에서 위치 추적할 수 있는 방법 있어?">📱 꺼진 스마트폰 추적 팁</button>
+          </div>
+
+          <div id="ai-chat-box" class="chat-messages-scroll">
+            <div class="msg-bubble msg-ai">
+              안녕하세요! 잃어버리셨거나 주우신 물건이 있으신가요? 상황을 말씀해 주시면 골든타임 행동 요령부터 보관처 확인까지 차근차근 도와드릴게요.
+            </div>
+          </div>
+
+          <div class="chat-input-row">
+            <input type="text" id="ai-chat-input" placeholder="탐정에게 질문할 내용을 입력하세요 (예: 카페에 노트북을 두고 왔어요)" autocomplete="off">
+            <button type="button" id="btn-ai-chat-send" class="btn-send-round">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- [VIEW 4] 내 기록 (검색 내역 + 등록 보관함) -->
+      <!-- ========================================== -->
+      <section id="view-history" class="content-view hidden">
+        <div class="history-layout">
+          <div class="history-card">
+            <div class="section-title-row">
+              <h3 class="section-heading">내가 등록한 분실물 / 습득물</h3>
+              <span id="history-items-count" class="count-pill">총 0건</span>
+            </div>
+            <div id="history-registered-items" class="history-items-grid">
+              <!-- 동적 렌더링 -->
+            </div>
+          </div>
+
+          <div class="history-card">
+            <div class="section-title-row">
+              <h3 class="section-heading">최근 검색 기록</h3>
+              <button type="button" id="btn-clear-history-searches" class="btn-clean">전체 삭제</button>
+            </div>
+            <div id="history-searches-chips" class="chip-tags-box">
+              <!-- 동적 렌더링 -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- [VIEW 5] 이웃과 1:1 안심 채팅 (신규 기능) -->
+      <!-- ========================================== -->
+      <section id="view-chat" class="content-view hidden">
+        <div class="neighbor-chat-layout">
+          <!-- 좌측: 채팅방 목록 -->
+          <div class="chat-rooms-sidebar">
+            <div class="chat-rooms-header">
+              <h3>대화 목록</h3>
+              <span class="safe-chat-tag">🛡️ 안심 번호 보호</span>
+            </div>
+            <div id="chat-rooms-list" class="chat-rooms-list">
+              <!-- 동적 렌더링 -->
+            </div>
+          </div>
+
+          <!-- 우측: 1:1 실시간 대화창 -->
+          <div class="chat-conversation-area">
+            <!-- 선택된 물건 미니 상단 바 -->
+            <div id="active-chat-item-bar" class="active-item-bar">
+              <img id="chat-item-thumb" src="" alt="물품" class="chat-item-thumb">
+              <div class="chat-item-info">
+                <div class="chat-item-title-row">
+                  <span id="chat-item-mode-badge" class="res-tag-found">습득물</span>
+                  <span id="chat-item-name" class="chat-item-name">에어팟 프로 2세대 본체</span>
+                </div>
+                <div id="chat-item-loc" class="chat-item-loc">📍 강남역 11번 출구 벤치</div>
+              </div>
+              <button type="button" id="btn-chat-item-detail" class="btn-clean-blue">상세보기</button>
+            </div>
+
+            <!-- 빠른 질문/상용구 칩 -->
+            <div class="quick-phrase-chips">
+              <button type="button" class="phrase-chip" data-text="안녕하세요! 혹시 물건 보관 중이신가요?">👋 보관 확인</button>
+              <button type="button" class="phrase-chip" data-text="본인 확인을 위해 고유 특징(색상/스티커 등)을 여쭤볼 수 있을까요?">🔍 특징 확인</button>
+              <button type="button" class="phrase-chip" data-text="가까운 역무실이나 경비실에 맡겨주실 수 있나요?">🏢 인계 요청</button>
+              <button type="button" class="phrase-chip" data-text="소중한 물건을 찾아주셔서 정말 감사합니다!">🙏 감사 인사</button>
+            </div>
+
+            <!-- 메시지 스크롤 영역 -->
+            <div id="neighbor-chat-messages" class="neighbor-messages-scroll">
+              <div class="chat-start-notice">
+                <span>안전한 직거래 및 공공 유실물센터/역무실 인계를 권장합니다.</span>
+              </div>
+            </div>
+
+            <!-- 메시지 입력창 -->
+            <div class="neighbor-input-bar">
+              <input type="text" id="neighbor-chat-input" placeholder="메시지를 입력하세요 (개인정보는 마스킹 처리돼요)" autocomplete="off">
+              <button type="button" id="btn-neighbor-send" class="btn-primary-dark">
+                <span>전송</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- 상세 보기 모달 팝업 (Toss TDS 스타일) -->
+  <div id="item-detail-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modal-item-title" class="modal-title">분실물 상세 정보</h3>
+        <button type="button" id="btn-close-modal" class="modal-close-btn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-image-wrapper">
+          <img id="modal-item-image" src="" alt="물품 상세 사진" class="modal-image">
+        </div>
+        <div class="modal-info-content">
+          <div class="modal-badges-row">
+            <span id="modal-mode-badge" class="res-tag-found">습득물</span>
+            <span id="modal-category-badge" class="category-chip">전자기기</span>
+          </div>
+          <h2 id="modal-item-name" class="modal-item-name">에어팟 프로 2세대 본체</h2>
+          <div class="modal-meta-list">
+            <div class="modal-meta-item">
+              <span class="meta-label">발견/분실 장소</span>
+              <span id="modal-item-location" class="meta-val">강남역 11번 출구 벤치</span>
+            </div>
+            <div class="modal-meta-item">
+              <span class="meta-label">등록 일시</span>
+              <span id="modal-item-time" class="meta-val">오늘 오전 10시경</span>
+            </div>
+            <div class="modal-meta-item">
+              <span class="meta-label">색상 / 외관</span>
+              <span id="modal-item-color" class="meta-val">화이트</span>
+            </div>
+            <div class="modal-meta-item">
+              <span class="meta-label">AI 식별 특징</span>
+              <p id="modal-item-features" class="meta-features">곰돌이 푸우 스티커가 부착된 투명 케이스</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="modal-footer-btns">
+          <button type="button" id="btn-modal-map" class="btn-ghost-dark">
+            <span>📍 지도에서 찾아가기</span>
+          </button>
+          <button type="button" id="btn-modal-chat" class="btn-primary-dark">
+            <span>💬 이웃과 1:1 대화</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

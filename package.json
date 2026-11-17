@@ -1,0 +1,13 @@
+{
+  "name": "findit",
+  "version": "1.0.0",
+  "description": "반응형 AI 분실물 찾기 웹앱 (Karrot SEED v2 디자인)",
+  "main": "api/analyze-image.js",
+  "scripts": {
+    "dev": "node dev.js",
+    "start": "node dev.js"
+  },
+  "keywords": ["findit", "openrouter", "gemma", "lost-and-found"],
+  "author": "",
+  "license": "MIT"
+}
